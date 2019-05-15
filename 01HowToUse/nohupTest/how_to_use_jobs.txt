@@ -1,0 +1,68 @@
+nohup command is: 
+nohup COMMAND > Output.txt
+
+to see Output live 
+tail -f Output.txt
+ 
+you can save the PID using 
+`` nohup ./test > log.txt 2>&1 & echo $! > save_pid.txt ``
+
+for using jobs if you type
+jobs -l
+the jobs pass you the PID of nohup pro.
+
+then you can kill them by : 
+kill -9 PID
+
+
+ps: every Julia program needs to have 
+
+`flush(STDOUT);`
+
+command after printing. unless otherwise it wont print anything to the file untill the programm finishes the work.
+
+
+using ps xw find the process or ps auxw.
+
+and using 
+lsof | grep file.out
+
+fined who is writing on the file.
+
+
+code to fined which aplication is writing on my files.
+
+"
+
+
+
+
+One way to distinguish between these processes are through there stdout redirections and there is no good way of doing that using ps command.
+
+If you have pgrep installed, you can use that with a simple for loop to know which pid correspond to which output file. Something like the following,
+
+===========================code starts here ==================================
+for pid in $(pgrep julia); 
+do 
+   echo -n "$pid: "; 
+   readlink -f /proc/${pid}/fd/1; 
+done
+============================code ends here ===================================
+/proc/${pid}/fd/1 represents the stdout for the process with pid. It's a symlink, so you need to use readlink to check the source.
+
+Output:
+
+12345: /path/to/output1.txt
+12349: /path/to/output2.txt
+12350: /path/to/output3.txt
+
+Alternative way would be to use lsof -p $pid, but I find it a bit on the heavy side than what you want to achieve, but the output would be same.
+
+for pid in $(pgrep julia); 
+do 
+   lsof -p $pid | awk -v var=$pid '/1w/ {print var": "$9}'; 
+done
+
+
+
+"
